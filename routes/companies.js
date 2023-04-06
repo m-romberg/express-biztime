@@ -21,14 +21,14 @@ router.get("/", async function (req, res) {
  */
 
 router.get("/:code", async function (req, res) {
-  const companyCode = req.params.code;
+  const code = req.params.code;
 
   const results = await db.query(
     "SELECT code, name, description FROM companies WHERE code = $1",
-    [companyCode]);
+    [code]);
   const company = results.rows[0];
 
-  if (!company) throw new NotFoundError(`No matching company ${companyCode}.`);
+  if (!company) throw new NotFoundError(`No matching company ${code}.`);
 
   return res.json({ company });
 });
@@ -37,8 +37,8 @@ router.get("/:code", async function (req, res) {
  * POST /companies return company {company: {code, name, description}}
  */
 
-router.post("/", async function(req, res){
-  if (req.body === undefined){
+router.post("/", async function (req, res) {
+  if (req.body === undefined) {
     throw new BadRequestError();
   }
 
@@ -48,12 +48,34 @@ router.post("/", async function(req, res){
     `INSERT INTO companies (code, name, description)
       VALUES ($1, $2, $3)
       RETURNING code, name, description`,
-     [code, name, description]
+    [code, name, description]
   );
 
-  const company = results.rows[0]
+  const company = results.rows[0];
 
   return res.status(201).json({ company });
-})
+});
+
+/**
+ * PUT /companies/code return company {company: {code, name, description}}
+ * or 404 if not found
+ */
+router.put("/:code", async function (req, res) {
+  if (req.body === undefined) throw new BadRequestError();
+
+  const code = req.params.code;
+  const results = await db.query(
+    `UPDATE companies
+      SET name=$1, description=$2
+      WHERE code = $3
+      RETURNING code, name, description`,
+    [req.body.name, req.body.description, code]
+  );
+  const company = results.rows[0];
+
+  if (!company) throw new NotFoundError(`No matching company ${code}`);
+
+  return res.json({ company });
+});
 
 module.exports = router;
