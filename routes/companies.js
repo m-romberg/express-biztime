@@ -1,6 +1,7 @@
 "use strict";
 
 const express = require("express");
+const app = require("../app");
 const db = require("../db");
 const router = new express.Router();
 const { BadRequestError, NotFoundError } = require("../expressError");
@@ -77,5 +78,28 @@ router.put("/:code", async function (req, res) {
 
   return res.json({ company });
 });
+
+/**
+ * DELETE /companies/code returns {status: "deleted"}
+ * or 404 if not found
+ */
+
+router.delete("/:code", async function (req, res) {
+
+  const code = req.params.code;
+  const results = await db.query(
+    `DELETE FROM companies
+      WHERE code = $1
+      RETURNING code`,
+      [code]
+  );
+
+  const company = results.rows[0];
+
+  if (!company) throw new NotFoundError(`No matching company ${code}`);
+
+  return res.json({ status: "deleted" });
+
+})
 
 module.exports = router;
