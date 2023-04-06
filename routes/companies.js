@@ -34,7 +34,7 @@ router.get("/:code", async function (req, res) {
 });
 
 /**
- * POST /companies return company {company: {code, name, description}}
+ * POST /companies return {company: {code, name, description}}
  */
 
 router.post("/", async function (req, res) {
