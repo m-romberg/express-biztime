@@ -38,6 +38,10 @@ router.get("/:code", async function (req, res) {
  */
 
 router.post("/", async function(req, res){
+  if (req.body === undefined){
+    throw new BadRequestError();
+  }
+
   const { code, name, description } = req.body;
 
   const results = await db.query(
