@@ -1,3 +1,5 @@
+"use strict";
+
 /** BizTime express application. */
 
 const express = require("express");
@@ -9,6 +11,8 @@ app.use(express.json());
 
 const companyRoutes = require("./routes/companies");
 
+
+/** Handles all requests that begin with /companies */
 app.use("/companies", companyRoutes)
 
 
