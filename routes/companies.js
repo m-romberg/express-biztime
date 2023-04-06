@@ -11,7 +11,10 @@ const { BadRequestError, NotFoundError } = require("../expressError");
  */
 
 router.get("/", async function (req, res) {
-  const results = await db.query("SELECT code, name FROM companies");
+  const results = await db.query(`
+  SELECT code, name
+    FROM companies`);
+
   const companies = results.rows;
 
   return res.json({ companies });
@@ -23,9 +26,11 @@ router.get("/", async function (req, res) {
 
 router.get("/:code", async function (req, res) {
   const code = req.params.code;
-
+//separate SQL queries by CAPITAL keywords
   const results = await db.query(
-    "SELECT code, name, description FROM companies WHERE code = $1",
+    `SELECT code, name, description
+      FROM companies
+      WHERE code = $1`,
     [code]
   );
   const company = results.rows[0];
@@ -36,15 +41,21 @@ router.get("/:code", async function (req, res) {
 });
 
 /**
- * POST /companies return {company: {code, name, description}}
+ * POST /companies
+ * accepts JSON {code, name, description}
+ * returns JSON {company: {code, name, description}}
  */
 
 router.post("/", async function (req, res) {
   if (req.body === undefined) {
-    throw new BadRequestError();
-  }
+    throw new BadRequestError('Needs {code, name, description}');
+  };
 
   const { code, name, description } = req.body;
+
+  if(!code || !name || !description){
+    throw new BadRequestError('Needs {code, name, description}');
+  };
 
   const results = await db.query(
     `INSERT INTO companies (code, name, description)
@@ -59,21 +70,27 @@ router.post("/", async function (req, res) {
 });
 
 /**
- * PUT /companies/code return company {company: {code, name, description}}
+ * PUT /companies/code
+ * accepts JSON {name, description}
+ * returns JSON {company: {code, name, description}}
  * or 404 if not found
  */
 
 router.put("/:code", async function (req, res) {
-  if (req.body === undefined) throw new BadRequestError();
+  if (req.body === undefined) {
+    throw new BadRequestError("Needs {name, description}");
+  };
 
+  const { name, description } = req.body
   const code = req.params.code;
   const results = await db.query(
     `UPDATE companies
       SET name=$1, description=$2
       WHERE code = $3
       RETURNING code, name, description`,
-    [req.body.name, req.body.description, code]
+    [name, description, code]
   );
+
   const company = results.rows[0];
 
   if (!company) throw new NotFoundError(`No matching company ${code}`);
