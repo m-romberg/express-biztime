@@ -51,6 +51,8 @@ router.get("/:id", async function (req, res) {
   );
 
   const company = resultsC.rows[0];
+  //do we need this check? is it appropriate? does referential integrity save us?
+
   if (!company) throw new NotFoundError(
     `No matching invoice with company ${company}`);
 
@@ -58,4 +60,33 @@ router.get("/:id", async function (req, res) {
   invoice.company = company;
 
   return res.json({ invoice });
+});
+
+/**
+ * POST /invoices
+ * accepts JSON {comp_code, amt}
+ * returns JSON: {invoice: {id, comp_code, amt, paid, add_date, paid_date}}
+ */
+//how do we check if they send us a VALID, EXISTING comp code
+router.post("/", async function (req, res) {
+  if (req.body === undefined) {
+    throw new BadRequestError('Needs {comp_code, amt}');
+  };
+
+  const {comp_code, amt} = req.body;
+
+  if (!comp_code || !amt) {
+    throw new BadRequestError('Needs {comp_code, amt}');
+  };
+
+  const results = await db.query(
+    `INSERT INTO invoices (comp_code, amt)
+      VALUES ($1, $2)
+      RETURNING id, comp_code, amt, paid, add_date, paid_date`,
+    [comp_code, amt]
+  );
+
+  const invoice = results.rows[0];
+
+  return res.status(201).json({ invoice });
 });
