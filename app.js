@@ -7,7 +7,7 @@ const app = express();
 
 app.use(express.json());
 
-const companyRoutes = require("../routes/companies");
+const companyRoutes = require("./routes/companies");
 
 app.use("/companies", companyRoutes)
 
