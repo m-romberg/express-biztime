@@ -26,18 +26,34 @@ router.get("/", async function (req, res) {
 
 router.get("/:code", async function (req, res) {
   const code = req.params.code;
-//separate SQL queries by CAPITAL keywords
-  const results = await db.query(
+  const resultsC = await db.query(
     `SELECT code, name, description
       FROM companies
       WHERE code = $1`,
     [code]
   );
-  const company = results.rows[0];
+
+  const company = resultsC.rows[0];
 
   if (!company) throw new NotFoundError(`No matching company ${code}.`);
 
+  const resultsI = await db.query(
+    `SELECT id, amt, paid, add_date, paid_date, comp_code
+    FROM invoices
+    WHERE comp_code = $1`,
+    [code]
+  );
+
+  const invoice = resultsI.rows[0];
+
+  if (!invoice) {
+    company.invoices = "No current invoices available.";
+  } else {
+    company.invoices = invoice;
+  };
+
   return res.json({ company });
+
 });
 
 /**
