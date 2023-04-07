@@ -88,5 +88,39 @@ router.post("/", async function (req, res) {
 
   const invoice = results.rows[0];
 
+  if (!invoice) throw new NotFoundError(
+    `Invoice for ${comp_code} was not created. Sorry bozo.`);
+
   return res.status(201).json({ invoice });
+});
+
+/**
+ * PUT /invoices
+ * accepts JSON {amt}
+ * returns JSON: {invoice: {id, comp_code, amt, paid, add_date, paid_date}}
+ */
+
+router.put("/:id", async function(req, res) {
+  if (req.body === undefined) {
+    throw new BadRequestError('Needs {amt}');
+  };
+
+  const id = req.params.id;
+  const amt = req.body.amt;
+
+  const results = await db.query(
+    `UPDATE invoices
+      SET amt = $1
+      WHERE id = $2
+      RETURNING id, comp_code, amt, paid, add_date, paid_date`,
+      [amt, id]
+  );
+
+  const invoice = results.rows[0];
+
+  if (!invoice) throw new NotFoundError(
+    `No matching invoice with id ${id}`);
+
+  return res.json({ invoice });
+
 });
