@@ -95,7 +95,7 @@ router.post("/", async function (req, res) {
 });
 
 /**
- * PUT /invoices
+ * PUT /invoices/id
  * accepts JSON {amt}
  * returns JSON: {invoice: {id, comp_code, amt, paid, add_date, paid_date}}
  */
@@ -122,5 +122,31 @@ router.put("/:id", async function(req, res) {
     `No matching invoice with id ${id}`);
 
   return res.json({ invoice });
+
+});
+
+
+/**
+ * DELETE /invoices/id
+ * deletes a resource and returns JSON: {status: "deleted"}
+ */
+
+router.delete("/:id", async function(req, res) {
+
+  const id = req.params.id;
+
+  const results = await db.query(
+  `DELETE FROM invoices
+    WHERE id = $1
+    RETURNING id`,
+    [id]
+  );
+
+  const invoice = results.rows[0];
+
+  if (!invoice) throw new NotFoundError(
+    `No matching invoice with id ${id}`);
+
+  return res.json({status: "deleted"});
 
 });
